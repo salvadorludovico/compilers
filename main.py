@@ -1,21 +1,15 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 import sys
 from mapeador_tabela_analise import carregar_tabelas_csv
 from scanner import lexic_scanner
+from parser import Parser
 
-# Importar a nova classe ParserSemantico
-from parser import ParserSemantico
-
-# Definição das produções (corrigida conforme a gramática da tabela)
 producoes = {
     0:  ("P'", ["P"]),
     1:  ("P", ["inicio", "V", "A"]),
     2:  ("V", ["varinicio", "LV"]),
     3:  ("LV", ["D", "LV"]),
     4:  ("LV", ["varfim", "ptv"]),
-    5:  ("D", ["L", "TIPO", "ptv"]),  # Corrigido: L vem antes de TIPO
+    5:  ("D", ["L", "TIPO", "ptv"]),
     6:  ("L", ["id", "vir", "L"]),
     7:  ("L", ["id"]),
     8:  ("TIPO", ["int"]),
@@ -50,10 +44,8 @@ producoes = {
     37: ("A", ["fim"]),
 }
 
-# Símbolos de sincronismo para recuperação de erro
 simbolos_sincronismo = { 'ptv', 'fimse', 'fimfaca', 'varfim', 'fim', '$' }
 
-# Mapeamento de tokens para mensagens legíveis
 token_para_msg = {
     "inicio": "início do programa",
     "varinicio": "início da declaração de variáveis",
@@ -94,7 +86,6 @@ def main():
         print(f"📄 Arquivo fonte: {codigo_fonte}")
         print("=" * 60)
         
-        # 1. Análise Léxica
         print("\n🔤 FASE 1: Análise Léxica")
         tokens = lexic_scanner(codigo_fonte)
         
@@ -102,7 +93,6 @@ def main():
             print("❌ Erro: Nenhum token foi gerado pela análise léxica.")
             return False
         
-        # 2. Carregamento das tabelas de análise sintática
         print("\n📊 FASE 2: Carregamento das Tabelas de Análise")
         try:
             tabela_acoes, tabela_desvios = carregar_tabelas_csv("TABELA_ACOES_DESVIOS.csv")
@@ -114,16 +104,15 @@ def main():
             print(f"❌ Erro ao carregar tabelas: {e}")
             return False
         
-        # 3. Análise Sintática e Semântica
         print("\n🔗 FASE 3: Análise Sintática e Semântica")
-        parser = ParserSemantico(
+        parser = Parser(
             tokens,
             tabela_acoes,
             tabela_desvios,
             producoes,
             token_para_msg,
             simbolos_sincronismo,
-            "panico"  # Método de recuperação de erro
+            "panico"
         )
         
         sucesso = parser.analisar()

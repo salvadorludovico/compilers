@@ -382,7 +382,6 @@ def imprimir_lista_caracteres(lista_caracteres):
         print("-" * 25)
         for caractere in lista_caracteres:
             valor = caractere['valor']
-            # Para tornar quebras de linha e tabulações legíveis:
             if valor == '\n':
                 valor_visivel = '\\n'
             elif valor == '\t':
