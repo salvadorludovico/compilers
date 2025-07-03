@@ -7,7 +7,8 @@ class Parser:
             producoes,
             token_para_msg,
             simbolos_sincronismo,
-            metodo_recuperacao_erro="panico", 
+            semantico,
+            metodo_recuperacao_erro="panico",
             max_tentativas=10
         ):
 
@@ -27,6 +28,7 @@ class Parser:
         self.tentativas_recuperacao = 0
         self.token_para_msg = token_para_msg
         self.simbolos_sincronismo = simbolos_sincronismo
+        self.semantico = semantico
 
     def analisar(self):
         print("✳️  Análise Sintática Shift-Reduce:\n")
@@ -46,7 +48,7 @@ class Parser:
             if acao.startswith("s"):
                 prox_estado = int(acao[1:])
                 self.pilha.append(prox_estado) 
-                # TODO: EMPILHA token com seus atributos
+                self.semantico.pilha_semantica.append(token_atual) # empilha Token com seus atributos
                 self.ip += 1
                 # print(f"▷ SHIFT: '{simbolo}' → Estado {prox_estado}")
             elif acao.startswith("r"):
@@ -64,15 +66,23 @@ class Parser:
                     return False
                 self.pilha.append(prox_estado)
                 # print(f"◁ REDUCE: {simbolo_do_lado_esquerdo} → {' '.join(sequencia_lado_direito)} → GOTO {prox_estado}") 
+
+                atributos_desempilhados = []
+                for _ in range(tamanho_sequencia_lado_direito):
+                  atributos_desempilhados.insert(0, self.semantico.pilha_semantica.pop()) # Insere no início para manter a ordem
+
                 print(f"◁ {simbolo_do_lado_esquerdo} → {' '.join(sequencia_lado_direito)}")
                 # TODO: Chama uma função que executará as regras semânticas à regra sintática que foi reduzida
-                # Gerar um PROGRAMA.C se não tiver erro (código objeto)
+                self.semantico.acao_semantica(num_regra_de_producao)
             elif acao == "acc":
                 if(len(self.erros) == 0): 
                     print("✅ Sentença reconhecida com sucesso!")
+                    self.semantico.gerar_arquivo_saida()
                     return True
                 else:
                     self.imprimir_relatorio_erros()
+                    for erro in self.semantico.erros_semanticos:
+                      print(erro)
                     return False
                 
             else:

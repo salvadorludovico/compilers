@@ -1,5 +1,6 @@
 import sys
-from parser import Parser
+from parser import Parser # type: ignore
+from semantic import Semantic
 from mapeador_tabela_analise import carregar_tabelas_csv
 from scanner import lexic_scanner
 
@@ -76,7 +77,9 @@ token_para_msg = {
 tabela_acoes, tabela_desvios = carregar_tabelas_csv("TABELA_ACOES_DESVIOS.csv")
 
 codigo_fonte= sys.argv[1]
-tokens = lexic_scanner(codigo_fonte)
+tokens, tabela_de_simbolos = lexic_scanner(codigo_fonte)
+
+semantico = Semantic(tabela_de_simbolos)
 
 parser = Parser(
   tokens,
@@ -85,8 +88,11 @@ parser = Parser(
   producoes,
   token_para_msg,
   simbolos_sincronismo,
+  semantico,
   "panico"
 )
+
+
 
 parser.analisar()
 

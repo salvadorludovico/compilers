@@ -6,24 +6,45 @@ class TabelaDeSimbolos:
     def __init__(self):
         self.tabela = {}
     
+    # def inserir(self, token):
+    #     lexema = token["lexema"]
+
+    #     if lexema in palavras_reservadas:
+    #         return self.tabela[lexema]
+
+    #     for _, token_na_tabela in self.tabela.items():
+    #         if token_na_tabela["lexema"] == lexema:
+    #             return token_na_tabela
+
+    #     if lexema not in self.tabela:
+    #         self.tabela[lexema] = token
+    #         return token
+        
+    #     return self.tabela[lexema]
     def inserir(self, token):
         lexema = token["lexema"]
-
-        if lexema in palavras_reservadas:
-            return self.tabela[lexema]
-
-        for _, token_na_tabela in self.tabela.items():
-            if token_na_tabela["lexema"] == lexema:
-                return token_na_tabela
-
-        if lexema not in self.tabela:
-            self.tabela[lexema] = token
-            return token
+        # Não insere palavras reservadas e verifica se já existe
+        if lexema in palavras_reservadas or lexema in self.tabela:
+            return self.tabela.get(lexema)
         
-        return self.tabela[lexema]
+        # Insere o novo token
+        self.tabela[lexema] = token
+        return token
         
-    def buscar(self, token):
-        return self.tabela.get(token["classe"])
+    # def buscar(self, token):
+        # return self.tabela.get(token["classe"])
+    
+    def buscar(self, lexema):
+      # A busca DEVE ser feita pelo lexema!
+      return self.tabela.get(lexema)
+
+    def atualizar_tipo(self, lexema, tipo):
+        # Função útil para as regras de declaração
+        if lexema in self.tabela:
+            self.tabela[lexema]['tipo'] = tipo
+        else:
+            # Isso indicaria um erro lógico, a variável deveria ter sido inserida primeiro
+            pass
 
     def imprimir(self):
       print("\n✳️  Tabela de Símbolos:\n")
@@ -512,7 +533,7 @@ def lexic_scanner(codigo_fonte = "Font.ALG"):
 
     tabela_de_simbolos.imprimir()
 
-    return tokens
+    return tokens, tabela_de_simbolos
 
 if __name__ == "__main__":
     lexic_scanner("Font.ALG")
