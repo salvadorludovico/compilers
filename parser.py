@@ -80,37 +80,37 @@ class AnalisadorSemantico:
                 self.ids_aguardando_tipo.append(elementos[0])
             return {"simbolo": "L"}
             
-        elif num_producao == 8:  # TIPO → int
+        elif num_producao == 8:  
             return {"simbolo": "TIPO", "tipo": "int", "tipo_c": "int"}
             
-        elif num_producao == 9:  # TIPO → real
+        elif num_producao == 9:  
             return {"simbolo": "TIPO", "tipo": "real", "tipo_c": "double"}
             
-        elif num_producao == 10:  # TIPO → lit
+        elif num_producao == 10: 
             return {"simbolo": "TIPO", "tipo": "lit", "tipo_c": "literal"}
             
-        elif num_producao == 12:  # ES → leia id;
+        elif num_producao == 12:  
             if len(elementos) >= 2 and elementos[1].get("classe") == "id":
                 self._processar_leia(elementos[1])
             return {"simbolo": "ES"}
             
-        elif num_producao == 13:  # ES → escreva ARG;
+        elif num_producao == 13:
             if len(elementos) >= 2:
                 arg = elementos[1]
                 self._processar_escreva(arg)
             return {"simbolo": "ES"}
             
-        elif num_producao == 14:  # ARG → lit
+        elif num_producao == 14:  
             if elementos:
                 return {"simbolo": "ARG", "lexema": elementos[0].get("lexema", ""), 
                        "tipo": "lit", "classe": "lit"}
                        
-        elif num_producao == 15:  # ARG → num
+        elif num_producao == 15:  
             if elementos:
                 return {"simbolo": "ARG", "lexema": elementos[0].get("lexema", ""), 
                        "tipo": elementos[0].get("tipo", "int"), "classe": "num"}
                        
-        elif num_producao == 16:  # ARG → id
+        elif num_producao == 16: 
             if elementos:
                 id_token = elementos[0]
                 if self._verificar_declaracao(id_token):
@@ -119,24 +119,24 @@ class AnalisadorSemantico:
                            "classe": "id"}
             return {"simbolo": "ARG"}
             
-        elif num_producao == 18:  # CMD → id rcb LD;
+        elif num_producao == 18:  
             if len(elementos) >= 3:
                 id_token = elementos[0]
                 ld_token = elementos[2]
                 self._processar_atribuicao(id_token, ld_token)
             return {"simbolo": "CMD"}
             
-        elif num_producao == 19:  # LD → OPRD opm OPRD
+        elif num_producao == 19:  
             if len(elementos) >= 3:
                 return self._processar_operacao_aritmetica(elementos[0], elementos[1], elementos[2])
             return {"simbolo": "LD"}
             
-        elif num_producao == 20:  # LD → OPRD
+        elif num_producao == 20:  
             if elementos:
-                return elementos[0]  # Propaga atributos
+                return elementos[0] 
             return {"simbolo": "LD"}
             
-        elif num_producao == 21:  # OPRD → id
+        elif num_producao == 21: 
             if elementos:
                 id_token = elementos[0]
                 if self._verificar_declaracao(id_token):
@@ -145,31 +145,30 @@ class AnalisadorSemantico:
                            "classe": "id"}
             return {"simbolo": "OPRD"}
             
-        elif num_producao == 22:  # OPRD → num
+        elif num_producao == 22:  
             if elementos:
                 return {"simbolo": "OPRD", "lexema": elementos[0].get("lexema", ""), 
                        "tipo": elementos[0].get("tipo", "int"), "classe": "num"}
                        
-        elif num_producao == 25:  # CAB → se (EXP_R) entao
+        elif num_producao == 25:  
             if len(elementos) >= 3:
                 exp_r = elementos[2]
                 self._processar_inicio_se(exp_r)
             return {"simbolo": "CAB"}
             
-        elif num_producao == 24:  # COND → CAB CP
+        elif num_producao == 24: 
             self._processar_fim_se()
             return {"simbolo": "COND"}
             
-        elif num_producao == 26:  # EXP_R → OPRD opr OPRD
+        elif num_producao == 26: 
             if len(elementos) >= 3:
                 return self._processar_expressao_relacional(elementos[0], elementos[1], elementos[2])
             return {"simbolo": "EXP_R"}
             
-        elif num_producao == 37:  # A → fim
+        elif num_producao == 37: 
             self._finalizar_programa()
             return {"simbolo": "A"}
         
-        # Regras que não fazem nada (símbolo -)
         return {"simbolo": "DEFAULT"}
     
     def _iniciar_programa(self):
@@ -180,22 +179,18 @@ class AnalisadorSemantico:
     
     def _finalizar_declaracoes(self):
         """Finaliza declarações - variáveis temporárias serão adicionadas no final"""
-        # Adiciona 3 linhas brancas conforme especificação
         self.arquivo_objeto.extend(["", "", ""])
     
     def _processar_declaracao_tipo(self, tipo):
         """Processa declaração de tipo para variáveis aguardando"""
-        # Processa todos os IDs que estão aguardando tipo
         for id_elem in self.ids_aguardando_tipo:
             lexema = id_elem["lexema"]
             if lexema not in self.tipos_declarados:
                 self.tipos_declarados[lexema] = tipo
                 
-                # Adiciona declaração no arquivo objeto
                 tipo_c = self.tipo_para_c.get(tipo, tipo)
                 self.arquivo_objeto.append(f"{tipo_c} {lexema};")
         
-        # Limpa a lista após processar
         self.ids_aguardando_tipo = []
     
     def _verificar_declaracao(self, id_token):
@@ -232,7 +227,6 @@ class AnalisadorSemantico:
         tipo = arg.get("tipo", "")
         
         if classe == "lit":
-            # Remove aspas se existirem
             if lexema.startswith('"') and lexema.endswith('"'):
                 lexema = lexema[1:-1]
             self.arquivo_objeto.append(f'printf("{lexema}");')
@@ -347,14 +341,12 @@ class AnalisadorSemantico:
                 linhas_brancas_consecutivas = 0
         
         if indice_insercao != -1:
-            # Prepara as linhas das variáveis temporárias
             linhas_temp = ["/*----Variaveis temporarias----*/"]
             for var_nome, tipo in sorted(self.variaveis_temporarias_usadas):
                 tipo_c = self.tipo_para_c.get(tipo, tipo)
                 linhas_temp.append(f"{tipo_c} {var_nome};")
             linhas_temp.append("/*------------------------------*/")
             
-            # Insere as variáveis temporárias no local correto
             for i, linha in enumerate(linhas_temp):
                 self.arquivo_objeto.insert(indice_insercao + i, linha)
     
