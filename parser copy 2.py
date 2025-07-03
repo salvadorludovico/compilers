@@ -55,7 +55,7 @@ class AnalisadorSemantico:
     def _aplicar_regra(self, num_producao, elementos):
         """Aplica a regra semântica específica"""
         if num_producao == 1:  # P → inicio V A
-            # self._iniciar_programa()
+            self._iniciar_programa()
             return {"simbolo": "P"}
             
         elif num_producao == 4:  # LV → varfim;
@@ -384,13 +384,7 @@ class AnalisadorSemantico:
         print("\n✳️  Código Objeto Gerado:\n")
         for linha in self.arquivo_objeto:
             print(linha)
-            
-            
-            
-            
-            
-            
-            
+
 class ParserSemantico:
     def __init__(
             self,

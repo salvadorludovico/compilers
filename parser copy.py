@@ -6,7 +6,7 @@ class AnalisadorSemantico:
         self.contador_variaveis_temp = 0
         self.erros_semanticos = []
         self.tipos_declarados = {}  # Para tracking de tipos
-        self.variaveis_temporarias_usadas = set()  # Conjunto de variáveis temporárias usadas
+        self.variaveis_temporarias = []  # Para declaração no início do programa
         self.dentro_programa = False
         self.ids_aguardando_tipo = []  # Lista de IDs esperando tipo
         
@@ -26,10 +26,10 @@ class AnalisadorSemantico:
         ]
     
     def gerar_variavel_temporaria(self, tipo='int'):
-        """Gera uma nova variável temporária e registra seu uso"""
+        """Gera uma nova variável temporária"""
         var_nome = f"T{self.contador_variaveis_temp}"
         self.contador_variaveis_temp += 1
-        self.variaveis_temporarias_usadas.add((var_nome, tipo))
+        self.variaveis_temporarias.append((var_nome, tipo))
         return var_nome
     
     def empilhar_token(self, token):
@@ -179,7 +179,15 @@ class AnalisadorSemantico:
             self.arquivo_objeto.append(header)
     
     def _finalizar_declaracoes(self):
-        """Finaliza declarações - variáveis temporárias serão adicionadas no final"""
+        """Finaliza declarações e adiciona variáveis temporárias"""
+        # Adiciona comentário e variáveis temporárias
+        if self.variaveis_temporarias:
+            self.arquivo_objeto.append("/*----Variaveis temporarias----*/")
+            for var_nome, tipo in self.variaveis_temporarias:
+                tipo_c = self.tipo_para_c.get(tipo, tipo)
+                self.arquivo_objeto.append(f"{tipo_c} {var_nome};")
+            self.arquivo_objeto.append("/*------------------------------*/")
+        
         # Adiciona 3 linhas brancas conforme especificação
         self.arquivo_objeto.extend(["", "", ""])
     
@@ -197,6 +205,11 @@ class AnalisadorSemantico:
         
         # Limpa a lista após processar
         self.ids_aguardando_tipo = []
+    
+    def _processar_id_lista(self, id_token):
+        """Processa ID em lista de declaração"""
+        # O tipo será atribuído posteriormente pela regra de TIPO
+        pass
     
     def _verificar_declaracao(self, id_token):
         """Verifica se uma variável foi declarada"""
@@ -328,36 +341,6 @@ class AnalisadorSemantico:
         """Finaliza o programa C"""
         self.arquivo_objeto.append("}")
     
-    def _preparar_codigo_final(self):
-        """Prepara o código final inserindo variáveis temporárias apenas uma vez"""
-        if not self.variaveis_temporarias_usadas:
-            return
-            
-        # Encontra o índice onde estão as 3 linhas brancas (após varfim;)
-        indice_insercao = -1
-        linhas_brancas_consecutivas = 0
-        
-        for i, linha in enumerate(self.arquivo_objeto):
-            if linha.strip() == "":
-                linhas_brancas_consecutivas += 1
-                if linhas_brancas_consecutivas == 3:
-                    indice_insercao = i + 1
-                    break
-            else:
-                linhas_brancas_consecutivas = 0
-        
-        if indice_insercao != -1:
-            # Prepara as linhas das variáveis temporárias
-            linhas_temp = ["/*----Variaveis temporarias----*/"]
-            for var_nome, tipo in sorted(self.variaveis_temporarias_usadas):
-                tipo_c = self.tipo_para_c.get(tipo, tipo)
-                linhas_temp.append(f"{tipo_c} {var_nome};")
-            linhas_temp.append("/*------------------------------*/")
-            
-            # Insere as variáveis temporárias no local correto
-            for i, linha in enumerate(linhas_temp):
-                self.arquivo_objeto.insert(indice_insercao + i, linha)
-    
     def gerar_arquivo_objeto(self, nome_arquivo="PROGRAMA.C"):
         """Gera o arquivo objeto final"""
         if self.erros_semanticos:
@@ -365,9 +348,6 @@ class AnalisadorSemantico:
             for erro in self.erros_semanticos:
                 print(f"   {erro}")
             return False
-        
-        # Prepara o código final uma única vez
-        self._preparar_codigo_final()
         
         try:
             with open(nome_arquivo, 'w', encoding='utf-8') as f:
@@ -384,13 +364,8 @@ class AnalisadorSemantico:
         print("\n✳️  Código Objeto Gerado:\n")
         for linha in self.arquivo_objeto:
             print(linha)
-            
-            
-            
-            
-            
-            
-            
+
+
 class ParserSemantico:
     def __init__(
             self,
